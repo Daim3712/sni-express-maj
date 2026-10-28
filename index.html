@@ -2596,14 +2596,13 @@ async function majTelephone(i){
   const {Filesystem,WebView}=Capacitor.Plugins, dir='maj/'+i.version;
   await Filesystem.writeFile({path:dir+'/index.html',data:await majGitHubHtml(i),directory:'DATA',encoding:'utf8',recursive:true});
   for(const x of i.lib||[]) await Filesystem.writeFile({path:dir+'/lib/'+x,data:await majGitHubTexte('lib/'+x),directory:'DATA',encoding:'utf8',recursive:true});
-  const u=await Filesystem.getUri({path:dir,directory:'DATA'});
+  const u=await Filesystem.getUri({path:dir,directory:'DATA'}), chemin=decodeURIComponent(u.uri.replace(/^file:\/\//,''));
   journal('Mise à jour automatique : version '+VERSION_APP+' → '+i.version);
-  await WebView.setServerBasePath({path:decodeURIComponent(u.uri.replace(/^file:\/\//,''))});
+  await WebView.setServerBasePath({path:chemin});
 }
 async function majAutoDemarrage(){
   /* La version téléchargée n'est gardée qu'une fois qu'elle a bien démarré ; les anciennes sont effacées */
-  if(NATIF) try{ const {WebView,Filesystem}=Capacitor.Plugins, b=(await WebView.getServerBasePath()).path||'';
-    if(b.includes('/maj/')){ await WebView.persistServerBasePath(); const cur=b.split('/maj/')[1].split('/')[0];
+  if(NATIF) try{ const {WebView,Filesystem}=Capacitor.Plugins, b=(await WebView.getServerBasePath()).path||'';    if(b.includes('/maj/')){ await WebView.persistServerBasePath(); const cur=b.split('/maj/')[1].split('/')[0];
       for(const x of (await Filesystem.readdir({path:'maj',directory:'DATA'})).files){ const n=x.name||x; if(n!==cur) await Filesystem.rmdir({path:'maj/'+n,directory:'DATA',recursive:true}); } } }catch(e){}
   const i=await majGitHubInfo(); if(!i) return; MAJ_EN_LIGNE=i;
   if(cmpVersion(i.version,VERSION_APP)<=0) return;
